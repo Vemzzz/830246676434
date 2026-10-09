@@ -32,7 +32,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
-    "esbuild": "^0.20.2"
+    "esbuild": "^0.28.2"
   },
   "comment_name": "DO NOT rename this package back to 9router. It must remain vansrouter to match the global updater configuration (see UPDATER_CONFIG in src/shared/constants/config.js). Changing this causes update loops and data mismatches.",
   "comment_sqlite": "sql.js is bundled here, including sql-wasm.wasm, as the offline fallback. better-sqlite3 is installed into ~/.9router/runtime/node_modules lazily by cli.js when the server starts, avoiding an install-time native build.",
