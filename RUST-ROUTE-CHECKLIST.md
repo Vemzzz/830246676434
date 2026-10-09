@@ -1,0 +1,183 @@
+# Rust route migration checklist
+
+Snapshot: 2026-10-08. Inventory source: `src/app/api/**/route.js`; each row is one Next.js route-handler file. A checked row means its current route methods have a corresponding Axum implementation and Rust proxy gate (or a verified alias re-export). The legacy handler remains as `RUST_BE=false` fallback.
+
+- Total route-handler files: **172**
+- Rust-backed route files: **46**
+- Remaining route files: **126**
+- File-level coverage: **26.7%**
+
+## Route inventory
+
+- [x] `/api/auth/check` — GET
+- [x] `/api/auth/login` — POST
+- [x] `/api/auth/logout` — POST
+- [x] `/api/auth/oidc/callback` — GET
+- [x] `/api/auth/oidc/start` — GET
+- [x] `/api/auth/oidc/test` — POST
+- [x] `/api/auth/reset-password` — POST
+- [x] `/api/auth/status` — GET
+- [ ] `/api/cli-tools/all-statuses` — GET
+- [ ] `/api/cli-tools/antigravity-mitm/alias` — GET, PUT
+- [ ] `/api/cli-tools/antigravity-mitm` — GET, POST, PATCH, DELETE
+- [ ] `/api/cli-tools/claude-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/cline-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/codewhale-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/codex-profiles` — GET, POST, DELETE
+- [ ] `/api/cli-tools/codex-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/copilot-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/cowork-mcp-registry` — GET
+- [ ] `/api/cli-tools/cowork-mcp-tools` — POST
+- [ ] `/api/cli-tools/cowork-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/crush-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/deepseek-tui-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/devin-settings` — GET
+- [ ] `/api/cli-tools/droid-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/forge-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/grok-build-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/hermes-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/jcode-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/kilo-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/omp-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/openclaw-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/opencode-settings` — GET, POST, PATCH, DELETE
+- [ ] `/api/cli-tools/pi-settings` — GET, POST, DELETE
+- [ ] `/api/cli-tools/smelt-settings` — GET, POST, DELETE
+- [x] `/api/combos/[id]` — GET, PUT, DELETE
+- [ ] `/api/combos/presets` — GET, POST
+- [x] `/api/combos` — GET, POST
+- [ ] `/api/headroom/extras` — GET, POST, DELETE
+- [ ] `/api/headroom/proxy/[...path]` — GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD
+- [ ] `/api/headroom/restart` — POST
+- [ ] `/api/headroom/start` — POST
+- [ ] `/api/headroom/status` — GET
+- [ ] `/api/headroom/stop` — POST
+- [x] `/api/health` — GET, OPTIONS
+- [x] `/api/init` — GET
+- [x] `/api/keys/[id]` — GET, PUT, DELETE
+- [x] `/api/keys` — GET, POST
+- [x] `/api/locale` — POST
+- [ ] `/api/mcp/[plugin]/message` — POST
+- [ ] `/api/mcp/[plugin]/sse` — GET
+- [ ] `/api/media-providers/tts/deepgram/voices` — GET
+- [ ] `/api/media-providers/tts/elevenlabs/voices` — GET
+- [ ] `/api/media-providers/tts/inworld/voices` — GET
+- [ ] `/api/media-providers/tts/minimax/voices` — GET
+- [ ] `/api/media-providers/tts/voices` — GET
+- [x] `/api/models/alias` — GET, PUT, DELETE
+- [x] `/api/models/availability` — GET, POST
+- [ ] `/api/models/catalog-sync` — GET, POST
+- [x] `/api/models/custom` — GET, POST, DELETE
+- [x] `/api/models/disabled` — GET, POST, DELETE
+- [x] `/api/models` — GET, PUT
+- [ ] `/api/models/test` — POST
+- [ ] `/api/oauth/[provider]/[action]` — GET, POST
+- [ ] `/api/oauth/codex/bulk-import` — POST
+- [ ] `/api/oauth/codex/import-token` — POST
+- [ ] `/api/oauth/cursor/auto-import` — GET
+- [ ] `/api/oauth/cursor/import` — GET, POST
+- [ ] `/api/oauth/gitlab/pat` — POST
+- [ ] `/api/oauth/grok-cli/bulk-import` — POST
+- [ ] `/api/oauth/iflow/cookie` — POST
+- [ ] `/api/oauth/kiro/api-key` — POST
+- [ ] `/api/oauth/kiro/auto-import` — GET
+- [ ] `/api/oauth/kiro/import` — POST
+- [ ] `/api/oauth/kiro/import-cli-proxy` — POST
+- [ ] `/api/oauth/kiro/social-authorize` — GET
+- [ ] `/api/oauth/kiro/social-exchange` — POST
+- [ ] `/api/oauth/zed/auto-import` — GET
+- [ ] `/api/oauth/zed/import` — POST
+- [x] `/api/pricing` — GET, PATCH, DELETE
+- [x] `/api/provider-nodes/[id]` — PUT, DELETE
+- [x] `/api/provider-nodes` — GET, POST
+- [ ] `/api/provider-nodes/validate` — POST
+- [ ] `/api/providers/[id]/gcp-projects` — GET
+- [ ] `/api/providers/[id]/models` — GET
+- [x] `/api/providers/[id]/overrides` — GET, PUT
+- [x] `/api/providers/[id]` — GET, PUT, DELETE
+- [ ] `/api/providers/[id]/test` — POST
+- [ ] `/api/providers/[id]/test-models` — POST
+- [ ] `/api/providers/bulk` — POST
+- [x] `/api/providers/kilo/free-models` — GET
+- [ ] `/api/providers/circuit-breakers/[name]/reset` — POST
+- [ ] `/api/providers/circuit-breakers` — GET
+- [x] `/api/providers/client` — GET
+- [x] `/api/providers` — GET, POST
+- [x] `/api/providers/suggested-models` — GET
+- [ ] `/api/providers/test-batch` — POST
+- [ ] `/api/providers/validate` — POST
+- [ ] `/api/proxy-pools/[id]/fitness/clear` — POST
+- [ ] `/api/proxy-pools/[id]` — GET, PUT, DELETE
+- [ ] `/api/proxy-pools/[id]/test` — POST
+- [ ] `/api/proxy-pools/cloudflare-deploy` — POST
+- [ ] `/api/proxy-pools/deno-deploy` — POST
+- [ ] `/api/proxy-pools/fitness/clear-all` — POST
+- [ ] `/api/proxy-pools/fitness` — GET
+- [ ] `/api/proxy-pools` — GET, POST
+- [ ] `/api/proxy-pools/vercel-deploy` — POST
+- [ ] `/api/pxpipe/health` — GET, POST
+- [ ] `/api/pxpipe/install` — POST
+- [ ] `/api/pxpipe/logs` — GET
+- [ ] `/api/pxpipe/restart` — POST
+- [ ] `/api/pxpipe/start` — POST
+- [ ] `/api/pxpipe/stats` — GET
+- [ ] `/api/pxpipe/status` — GET
+- [ ] `/api/pxpipe/stop` — POST
+- [x] `/api/ready` — GET
+- [ ] `/api/settings/database` — GET, POST
+- [ ] `/api/settings/proxy-test` — POST
+- [x] `/api/settings/require-login` — GET
+- [ ] `/api/settings` — GET, PATCH
+- [ ] `/api/shutdown` — POST
+- [x] `/api/tags` — GET, OPTIONS
+- [ ] `/api/translator/console-logs` — GET, DELETE
+- [ ] `/api/translator/console-logs/stream` — GET
+- [ ] `/api/translator/load` — GET
+- [ ] `/api/translator/save` — POST
+- [ ] `/api/translator/send` — POST
+- [ ] `/api/translator/translate` — POST
+- [ ] `/api/tunnel/disable` — POST
+- [ ] `/api/tunnel/enable` — POST
+- [ ] `/api/tunnel/status` — GET
+- [ ] `/api/tunnel/tailscale-check` — GET
+- [ ] `/api/tunnel/tailscale-disable` — POST
+- [ ] `/api/tunnel/tailscale-enable` — POST
+- [ ] `/api/tunnel/tailscale-install` — POST
+- [ ] `/api/usage/[connectionId]/claude-reset` — POST
+- [ ] `/api/usage/[connectionId]/codex-reset-credits` — GET, POST
+- [ ] `/api/usage/[connectionId]` — GET
+- [x] `/api/usage/chart` — GET
+- [x] `/api/usage/history` — GET
+- [x] `/api/usage/logs` — GET
+- [x] `/api/usage/providers` — GET
+- [x] `/api/usage/request-details/[id]` — GET
+- [x] `/api/usage/request-details` — GET
+- [x] `/api/usage/request-logs` — GET
+- [x] `/api/usage/stats` — GET
+- [ ] `/api/usage/stream` — GET
+- [ ] `/api/v1/api/chat` — POST, OPTIONS
+- [ ] `/api/v1/audio/speech` — POST, OPTIONS
+- [ ] `/api/v1/audio/transcriptions` — POST, OPTIONS
+- [ ] `/api/v1/audio/voices` — GET, OPTIONS
+- [x] `/api/v1/chat/completions` — POST, OPTIONS
+- [ ] `/api/v1/embeddings` — POST, OPTIONS
+- [ ] `/api/v1/images/generations` — POST, OPTIONS
+- [ ] `/api/v1/messages/count_tokens` — POST, OPTIONS
+- [ ] `/api/v1/messages` — POST, OPTIONS
+- [ ] `/api/v1/models/[kind]` — GET, OPTIONS
+- [x] `/api/v1/models/info` — GET, OPTIONS
+- [x] `/api/v1/models` — GET, OPTIONS
+- [ ] `/api/v1/responses/compact` — POST, OPTIONS
+- [ ] `/api/v1/responses` — POST, OPTIONS
+- [x] `/api/v1` — GET
+- [ ] `/api/v1/search` — POST, OPTIONS
+- [ ] `/api/v1/videos/[id]` — GET, OPTIONS
+- [ ] `/api/v1/videos/edits` — POST, OPTIONS
+- [ ] `/api/v1/videos/extensions` — POST, OPTIONS
+- [ ] `/api/v1/videos/generations` — POST, OPTIONS
+- [ ] `/api/v1/web/fetch` — POST, OPTIONS
+- [ ] `/api/v1beta/models/[...path]` — POST, OPTIONS
+- [x] `/api/v1beta/models` — GET, OPTIONS
+- [x] `/api/version` — GET
+- [ ] `/api/version/shutdown` — POST
+- [ ] `/api/version/update` — POST

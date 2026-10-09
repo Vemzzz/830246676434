@@ -1,0 +1,17 @@
+*.js text eol=crlf whitespace=cr-at-eol
+*.cjs text eol=crlf whitespace=cr-at-eol
+*.mjs text eol=lf whitespace=cr-at-eol
+*.sh text eol=lf
+
+# Keep Node and shell entrypoints executable on Unix after a clean checkout.
+.kimchi/docs/remove-proptypes.js text eol=lf
+cli/cli.js text eol=lf
+cli/hooks/postinstall.js text eol=lf
+cli/scripts/*.cjs text eol=lf
+cli/scripts/*.js text eol=lf
+docker/*.cjs text eol=lf
+docker/entrypoint.sh text eol=lf
+scripts/*.js text eol=lf
+scripts/*.cjs text eol=lf
+server.js text eol=lf
+tests/fixtures/fake-devin-acp.mjs text eol=lf

@@ -1,0 +1,56 @@
+# VansRouter Docker Compose
+# Usage:
+#   1. cp .env.example .env && nano .env
+#   2. docker compose up -d
+#   3. Open http://localhost:20128/masuk
+
+services:
+  vansrouter:
+    image: ghcr.io/vanszs/vansrouter:${VANSROUTER_VERSION:?Set VANSROUTER_VERSION in .env}
+    container_name: vansrouter
+    restart: unless-stopped
+    ports:
+      # Published on all interfaces. Use "127.0.0.1:20128:20128" instead to keep the
+      # dashboard reachable only from the Docker host.
+      - "${PORT:-20128}:20128"
+    volumes:
+      - 9router-data:/app/data
+      # Compatibility source for pre-v0.91.22 named-volume installs.
+      # Bind-mount users must keep their existing host path or migrate it first.
+      # The entrypoint copies only missing files into the canonical volume.
+      - vansrouter-data:/migration-data:ro
+      # Optional: use the host's Tailscale daemon instead of the bundled one.
+      # Uncomment the line below and set TAILSCALE_USE_HOST_SOCKET=true in .env
+      # - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+    env_file:
+      - .env
+    environment:
+      DATA_DIR: /app/data
+      PORT: "20128"
+      HOSTNAME: "0.0.0.0"
+      NODE_ENV: production
+      HEADROOM_URL: http://headroom:8787
+      # Set TAILSCALE_USE_HOST_SOCKET=true to reuse the host Tailscale daemon.
+      # TAILSCALE_USE_HOST_SOCKET: "true"
+    depends_on:
+      headroom:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:20128/api/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  headroom:
+    image: ghcr.io/chopratejas/headroom@sha256:50b85d8e320cfcdf1b38919bb7ae067b93ff7a8de0a93f05b2c1246370200d1c
+    container_name: headroom
+    restart: unless-stopped
+    ports:
+      - "${HEADROOM_PORT:-8787}:8787"
+
+volumes:
+  9router-data:
+    name: 9router-data
+  vansrouter-data:
+    name: vansrouter-data
