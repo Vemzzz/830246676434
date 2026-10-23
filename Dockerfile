@@ -58,7 +58,7 @@ RUN node -e "const Database = require('better-sqlite3'); const db = new Database
 
 # Tailscale static binaries for Alpine Linux (bundled so tunnel works in Docker).
 # The archive checksum is verified before extraction.
-FROM alpine:3.19@sha256:6baf43584bcb78f2e5847d1de515f23499913ac9f12bdf834811a3145eb11ca1 AS tailscale
+FROM alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc AS tailscale
 ARG TARGETARCH
 RUN apk add --no-cache curl ca-certificates && \
   mkdir -p /out && \
